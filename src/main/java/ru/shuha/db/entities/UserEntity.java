@@ -1,12 +1,6 @@
 package ru.shuha.db.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user")
+@Table(name = "user", schema = "public")
 public class UserEntity {
 
     @Id
@@ -36,7 +30,11 @@ public class UserEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @ColumnTransformer(write = "?::account_role")
+    @ColumnTransformer(write = "?::user_role")
     private UserRole role;
+
+    @ManyToOne
+    @JoinColumn(name = "lobby_id")
+    private LobbyEntity lobby;
 
 }

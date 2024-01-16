@@ -53,12 +53,10 @@ public class TokenService {
     }
 
 
-
-    public String generateToken(String username){
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, username);
     }
-
 
 
     private String createToken(Map<String, Object> claims, String username) {
@@ -67,7 +65,11 @@ public class TokenService {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+1000*60*1))
+                .setExpiration(new Date(System.currentTimeMillis()
+                        + 1000 // milli
+                        * 60   // sec
+                        * 10   // min
+                ))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
     }
 

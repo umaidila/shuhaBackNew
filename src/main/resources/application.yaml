@@ -1,1 +1,11 @@
+server.port: 8080
+spring.datasource.driver-class-name: org.postgresql.Driver
 
+spring.datasource.url: jdbc:postgresql://localhost:5432/shuha
+spring.datasource.username: postgres
+spring.datasource.password: secretpassword
+
+spring.jpa:
+  show-sql: true
+  hibernate:
+    ddl-auto: validate
