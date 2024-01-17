@@ -11,6 +11,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/lobby")
+@CrossOrigin
 public class LobbyController {
 
     private final LobbyService lobbyService;

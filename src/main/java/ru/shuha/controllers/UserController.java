@@ -13,6 +13,7 @@ import ru.shuha.services.UserService;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
+@CrossOrigin
 public class UserController {
 
     private final UserService userService;
