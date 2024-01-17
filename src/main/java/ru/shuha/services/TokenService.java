@@ -8,16 +8,25 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ru.shuha.db.entities.RefreshTokenEntity;
+import ru.shuha.db.entities.UserEntity;
+import ru.shuha.db.repositories.RefreshTokenRepository;
+import ru.shuha.db.repositories.UserRepository;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @RequiredArgsConstructor
 @Service
 public class TokenService {
+
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public static final String SECRET = "357638792F423F4428472B4B6250655368566D597133743677397A2443264629";
 
@@ -53,13 +62,13 @@ public class TokenService {
     }
 
 
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        return createAccessToken(claims, username);
     }
 
 
-    private String createToken(Map<String, Object> claims, String username) {
+    private String createAccessToken(Map<String, Object> claims, String username) {
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -71,6 +80,31 @@ public class TokenService {
                         * 10   // min
                 ))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+    }
+
+    public void updateTokenByAccess()
+
+    public RefreshTokenEntity generateRefreshToken(String username) {
+        UserEntity user = userRepository.findByLogin(username).orElseThrow();
+        RefreshTokenEntity newRefreshToken = RefreshTokenEntity.builder()
+                .user(user)
+                .expirationDate(Instant.now().plusSeconds(
+                        60L    // sec
+                        * 60   // min
+                        * 24   // hour
+                        * 30   // day
+                ))
+                .token(UUID.randomUUID().toString())
+                .build();
+        return refreshTokenRepository.save(newRefreshToken);
+    }
+
+    public RefreshTokenEntity verifyExpiration(RefreshTokenEntity token){
+        if(token.getExpirationDate().compareTo(Instant.now())<0){
+            refreshTokenRepository.delete(token);
+            throw new RuntimeException(token.getToken() + " Refresh token is expired. Please make a new login..!");
+        }
+        return token;
     }
 
     private Key getSignKey() {

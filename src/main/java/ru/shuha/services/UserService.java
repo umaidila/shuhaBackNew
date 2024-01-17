@@ -2,7 +2,6 @@ package ru.shuha.services;
 
 
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.Token;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +41,6 @@ public class UserService {
         if (!bCryptPasswordEncoder.matches(loginUserDto.getPassword(), existedUser.getPassword())) {
             throw new ElementNotFoundException("Wrong password");
         }
-        return tokenService.generateToken(existedUser.getLogin());
+        return tokenService.generateAccessToken(existedUser.getLogin());
     }
 }
