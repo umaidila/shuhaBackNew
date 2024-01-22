@@ -12,6 +12,8 @@ import ru.shuha.db.entities.RefreshTokenEntity;
 import ru.shuha.db.entities.UserEntity;
 import ru.shuha.db.repositories.RefreshTokenRepository;
 import ru.shuha.db.repositories.UserRepository;
+import ru.shuha.exceptions.ElementNotFoundException;
+import ru.shuha.exceptions.PreconditionFailedException;
 
 import java.security.Key;
 import java.time.Instant;
@@ -82,10 +84,25 @@ public class TokenService {
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
     }
 
-    public void updateTokenByAccess()
+    public String updateTokenByAccess(String token) {
+        RefreshTokenEntity refreshToken = refreshTokenRepository.findByToken(token)
+                .orElseThrow(() -> new ElementNotFoundException("Refresh token not found"));
+        if (refreshToken.getExpirationDate().compareTo(Instant.now()) < 0) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new PreconditionFailedException(refreshToken.getToken() + " Refresh token is expired. Please make a new login..!");
+        }
 
-    public RefreshTokenEntity generateRefreshToken(String username) {
-        UserEntity user = userRepository.findByLogin(username).orElseThrow();
+        UserEntity user = refreshToken.getUser();
+        return generateAccessToken(user.getLogin());
+    }
+
+    public String generateRefreshToken(UserEntity user) {
+        refreshTokenRepository.deleteAllByUser(user);
+        String token;
+        do {
+            token = UUID.randomUUID().toString();
+        } while (refreshTokenRepository.existsByToken(token));
+
         RefreshTokenEntity newRefreshToken = RefreshTokenEntity.builder()
                 .user(user)
                 .expirationDate(Instant.now().plusSeconds(
@@ -96,16 +113,9 @@ public class TokenService {
                 ))
                 .token(UUID.randomUUID().toString())
                 .build();
-        return refreshTokenRepository.save(newRefreshToken);
+        return refreshTokenRepository.save(newRefreshToken).getToken();
     }
 
-    public RefreshTokenEntity verifyExpiration(RefreshTokenEntity token){
-        if(token.getExpirationDate().compareTo(Instant.now())<0){
-            refreshTokenRepository.delete(token);
-            throw new RuntimeException(token.getToken() + " Refresh token is expired. Please make a new login..!");
-        }
-        return token;
-    }
 
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
