@@ -2,6 +2,7 @@ package ru.shuha.services;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.shuha.db.entities.LobbyEntity;
 import ru.shuha.db.entities.UserEntity;
@@ -13,9 +14,11 @@ import ru.shuha.exceptions.PreconditionFailedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LobbyService {
 
     private final LobbyRepository lobbyRepository;
@@ -25,6 +28,7 @@ public class LobbyService {
     private static final int MAX_LOBBY_USERS = 10;
 
     public Long createLobby() {
+        log.info("create lobby request");
         UserEntity loggedUser = authService.getAuthUser();
         LobbyEntity newLobby = LobbyEntity.builder()
                 .kind(LobbyType.PUBLIC)
@@ -50,6 +54,7 @@ public class LobbyService {
     }
 
     public void joinLobby(Long lobbyId) {
+        log.info("join lobby request for id {}", lobbyId);
         UserEntity loggedUser = authService.getAuthUser();
         lobbyRepository.findById(lobbyId).ifPresent(lobby -> {
             if (lobby.getUsers().size() < MAX_LOBBY_USERS) {

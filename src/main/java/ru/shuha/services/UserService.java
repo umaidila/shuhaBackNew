@@ -2,6 +2,7 @@ package ru.shuha.services;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import ru.shuha.exceptions.ElementNotFoundException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -24,6 +26,7 @@ public class UserService {
 
     @Transactional
     public Long registerUser(RegisterUserDto registerUserDto) {
+        log.info("Registering new user {}", registerUserDto);
         if (userRepository.existsByLogin(registerUserDto.getEmail())){
             throw new ElementAlreadyExistsException("User with email " + registerUserDto.getEmail() + " already exists");
         }
@@ -31,11 +34,13 @@ public class UserService {
         newUser.setRole(UserRole.ROLE_USER);
         newUser.setPassword(bCryptPasswordEncoder.encode(registerUserDto.getPassword()));
         newUser.setLogin(registerUserDto.getEmail());
+
         return userRepository.save(newUser).getId();
     }
 
     @Transactional
     public LoginResponseDto loginUser(LoginUserDto loginUserDto){
+        log.info("Login user {}", loginUserDto);
         UserEntity existedUser = userRepository.findByLogin(loginUserDto.getEmail()).orElseThrow(
                 () -> new ElementNotFoundException("User not found")
         );
